@@ -94,21 +94,58 @@ import (
 	"github.com/auula/bottle"
 )
 
-func main() {
-	// open bottle storage engine
-	store, _ := bottle.Open("./testdata/")
-
-	// Put the value and set the validity period
-	store.Put([]byte("foo"), []byte("bar"), bottle.TTL(5))
-	store.Put([]byte("demo"), []byte("value"))
-
-	entity, _ := store.Get([]byte("demo"))
-	fmt.Println(entity.Value)
-
-	store.Remove([]byte("foo"))
-	// close bottle storage engine
-	store.Close()
+func init() {
+	bottle.Open(bottle.Option{
+		Directory:       "./data",
+		DataFileMaxSize: 10240,
+	})
 }
+
+type Userinfo struct {
+	Name  string
+	Age   uint8
+	Skill []string
+}
+
+func main() {
+
+	//// PUT Data
+	bottle.Put([]byte("foo"), []byte("66.6"))
+
+	// 如果转成string那么就是字符串
+	fmt.Println(bottle.Get([]byte("foo")).String())
+
+	// 如果不存在默认值就是0
+	fmt.Println(bottle.Get([]byte("foo")).Int())
+
+	// 如果不成功就是false
+	fmt.Println(bottle.Get([]byte("foo")).Bool())
+
+	// 如果不成功就是0.0
+	fmt.Println(bottle.Get([]byte("foo")).Float())
+
+	user := Userinfo{
+		Name:  "Leon Ding",
+		Age:   22,
+		Skill: []string{"Java", "Go", "Rust"},
+	}
+
+	var u Userinfo
+
+	// 通过Bson保存数据对象,并且设置超时时间为5秒
+	bottle.Put([]byte("user"), bottle.Bson(&user), bottle.TTL(5))
+
+	// 通过Unwrap解析出结构体
+	bottle.Get([]byte("user")).Unwrap(&u)
+
+	// 打印取值
+	fmt.Println(u)
+
+	if err := bottle.Close(); err != nil {
+		fmt.Println(err)
+	}
+}
+
 
 
 						</code></pre>
